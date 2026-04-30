@@ -1,0 +1,14 @@
+{
+  "/api": {
+    "target": "http://localhost:8088",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/generateToken": {
+    "target": "http://localhost:8088",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

@@ -1,0 +1,86 @@
+import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+
+import { AuthService } from '../core/auth.service';
+import { CurrentUserService } from '../core/current-user.service';
+import { RESOURCE_CONFIGS } from '../data/resource-config';
+
+@Component({
+  selector: 'app-shell',
+  standalone: true,
+  imports: [AsyncPipe, NgFor, NgIf, RouterLink, RouterLinkActive, RouterOutlet],
+  template: `
+    <div class="app-shell">
+      <aside class="app-sidebar">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="brand-mark">
+            <i class="bi bi-bookshelf"></i>
+          </div>
+          <div>
+            <div class="fw-bold fs-5">Book Inventory</div>
+            <div class="text-muted small">Spring Boot API</div>
+          </div>
+        </div>
+
+        <div class="nav-section-title">Workspace</div>
+        <nav class="d-grid gap-1">
+          <a class="side-link" routerLink="/dashboard" routerLinkActive="active">
+            <i class="bi bi-speedometer2"></i>
+            <span>Dashboard</span>
+          </a>
+          <a class="side-link" routerLink="/catalog" routerLinkActive="active">
+            <i class="bi bi-journal-richtext"></i>
+            <span>Catalog</span>
+          </a>
+          <a class="side-link" routerLink="/cart" routerLinkActive="active">
+            <i class="bi bi-cart-check"></i>
+            <span>Cart</span>
+          </a>
+        </nav>
+
+        <div class="nav-section-title">Tables</div>
+        <nav class="d-grid gap-1">
+          <a
+            *ngFor="let resource of resources"
+            class="side-link"
+            [routerLink]="['/manage', resource.key]"
+            routerLinkActive="active"
+          >
+            <i class="bi {{ resource.icon }}"></i>
+            <span>{{ resource.title }}</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="app-main">
+        <header class="topbar d-flex align-items-center justify-content-between gap-3">
+          <div *ngIf="authState$ | async as auth">
+            <div class="fw-semibold">{{ auth.username || 'Signed in' }}</div>
+            <div class="text-muted small">{{ auth.roles.length ? auth.roles.join(', ') : 'Authenticated user' }}</div>
+          </div>
+          <button class="btn btn-outline-danger" type="button" (click)="logout()">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </button>
+        </header>
+
+        <router-outlet />
+      </main>
+    </div>
+  `
+})
+export class ShellComponent {
+  private readonly auth = inject(AuthService);
+  private readonly currentUser = inject(CurrentUserService);
+  private readonly router = inject(Router);
+
+  readonly authState$ = this.auth.authState$;
+  readonly resources = RESOURCE_CONFIGS;
+
+  logout(): void {
+    this.currentUser.clear();
+    this.auth.logout();
+    this.router.navigateByUrl('/login');
+  }
+}
