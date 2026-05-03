@@ -1,5 +1,7 @@
 import { ResourceConfig, ResourceKey } from './models';
 
+export const MANAGED_RESOURCE_KEYS: ResourceKey[] = ['authors', 'categories', 'publishers', 'inventories'];
+
 export const RESOURCE_CONFIGS: ResourceConfig[] = [
   {
     key: 'books',
@@ -27,7 +29,7 @@ export const RESOURCE_CONFIGS: ResourceConfig[] = [
     idFields: ['authorID'],
     labelFields: ['firstName', 'lastName', 'authorID'],
     fields: [
-      { key: 'authorID', label: 'Author ID', type: 'number', required: true, readonlyOnEdit: true },
+      { key: 'authorID', label: 'Author ID', type: 'number', generated: true, readonlyOnEdit: true },
       { key: 'firstName', label: 'First Name', type: 'text', required: true },
       { key: 'lastName', label: 'Last Name', type: 'text', required: true },
       { key: 'photo', label: 'Photo', type: 'text', maxLength: 1 }
@@ -42,7 +44,7 @@ export const RESOURCE_CONFIGS: ResourceConfig[] = [
     idFields: ['catId'],
     labelFields: ['categoryName', 'catId'],
     fields: [
-      { key: 'catId', label: 'Category ID', type: 'number', required: true, readonlyOnEdit: true },
+      { key: 'catId', label: 'Category ID', type: 'number', generated: true, readonlyOnEdit: true },
       { key: 'categoryName', label: 'Category Name', type: 'text', required: true }
     ]
   },
@@ -99,8 +101,8 @@ export const RESOURCE_CONFIGS: ResourceConfig[] = [
     labelFields: ['inventoryID', 'isbn'],
     fields: [
       { key: 'inventoryID', label: 'Inventory ID', type: 'number', generated: true, readonlyOnEdit: true },
-      { key: 'isbn', label: 'Book', type: 'select', required: true, relation: 'books', optionValue: 'isbn' },
-      { key: 'ranks', label: 'Condition', type: 'select', required: true, relation: 'book-conditions', optionValue: 'ranks' },
+      { key: 'isbn', label: 'Book', type: 'select', required: true, readonlyOnEdit: true, relation: 'books', optionValue: 'isbn' },
+      { key: 'ranks', label: 'Rank', type: 'select', required: true, relation: 'book-conditions', optionValue: 'ranks' },
       { key: 'purchased', label: 'Purchased', type: 'checkbox' }
     ]
   },

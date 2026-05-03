@@ -6,7 +6,10 @@ import { AuthService } from './auth.service';
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const token = inject(AuthService).token;
 
-  if (!token || request.url.endsWith('/generateToken')) {
+  const isPublicAuthRequest =
+    request.url.endsWith('/generateToken') || (request.method === 'POST' && request.url.endsWith('/api/users'));
+
+  if (!token || isPublicAuthRequest) {
     return next(request);
   }
 

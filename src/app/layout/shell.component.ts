@@ -1,10 +1,11 @@
 import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { map } from 'rxjs';
 
 import { AuthService } from '../core/auth.service';
 import { CurrentUserService } from '../core/current-user.service';
-import { RESOURCE_CONFIGS } from '../data/resource-config';
+import { MANAGED_RESOURCE_KEYS, RESOURCE_CONFIGS } from '../data/resource-config';
 
 @Component({
   selector: 'app-shell',
@@ -23,7 +24,7 @@ import { RESOURCE_CONFIGS } from '../data/resource-config';
           </div>
         </div>
 
-        <div class="nav-section-title">Workspace</div>
+        <div class="nav-section-title">Main</div>
         <nav class="d-grid gap-1">
           <a class="side-link" routerLink="/dashboard" routerLinkActive="active">
             <i class="bi bi-speedometer2"></i>
@@ -39,18 +40,24 @@ import { RESOURCE_CONFIGS } from '../data/resource-config';
           </a>
         </nav>
 
-        <div class="nav-section-title">Tables</div>
-        <nav class="d-grid gap-1">
-          <a
-            *ngFor="let resource of resources"
-            class="side-link"
-            [routerLink]="['/manage', resource.key]"
-            routerLinkActive="active"
-          >
-            <i class="bi {{ resource.icon }}"></i>
-            <span>{{ resource.title }}</span>
-          </a>
-        </nav>
+        <ng-container *ngIf="isAdmin$ | async">
+          <div class="nav-section-title">Management</div>
+          <nav class="d-grid gap-1">
+            <a class="side-link" routerLink="/manage-books" routerLinkActive="active">
+              <i class="bi bi-book"></i>
+              <span>Manage Books</span>
+            </a>
+            <a
+              *ngFor="let resource of adminResources"
+              class="side-link"
+              [routerLink]="['/manage', resource.key]"
+              routerLinkActive="active"
+            >
+              <i class="bi {{ resource.icon }}"></i>
+              <span>{{ resource.title }}</span>
+            </a>
+          </nav>
+        </ng-container>
       </aside>
 
       <main class="app-main">
@@ -76,7 +83,10 @@ export class ShellComponent {
   private readonly router = inject(Router);
 
   readonly authState$ = this.auth.authState$;
-  readonly resources = RESOURCE_CONFIGS;
+  readonly isAdmin$ = this.auth.authState$.pipe(
+    map((state) => state.roles.some((role) => role.toUpperCase().includes('ADMIN')))
+  );
+  readonly adminResources = RESOURCE_CONFIGS.filter((resource) => MANAGED_RESOURCE_KEYS.includes(resource.key));
 
   logout(): void {
     this.currentUser.clear();

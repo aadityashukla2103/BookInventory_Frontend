@@ -1,6 +1,7 @@
 import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Observable, catchError, firstValueFrom, forkJoin, of } from 'rxjs';
 
 import { ApiService, extractErrorMessage } from '../../core/api.service';
@@ -34,7 +35,7 @@ interface CatalogBook {
 @Component({
   selector: 'app-catalog',
   standalone: true,
-  imports: [CurrencyPipe, FormsModule, NgFor, NgIf],
+  imports: [CurrencyPipe, FormsModule, NgFor, NgIf, RouterLink],
   template: `
     <section class="page-wrap">
       <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
@@ -101,17 +102,23 @@ interface CatalogBook {
               </div>
             </div>
             <p class="text-muted small mb-0 flex-grow-1">{{ book.description || 'No description available.' }}</p>
-            <div class="d-flex align-items-center justify-content-between border-top pt-3">
+            <div class="d-flex align-items-center justify-content-between gap-3 border-top pt-3">
               <div>
                 <div class="fw-bold">{{ book.priceLabel }}</div>
                 <div class="small" [class.text-success]="book.availableCopies" [class.text-danger]="!book.availableCopies">
                   {{ book.availableCopies }} available
                 </div>
               </div>
-              <button class="btn btn-primary" type="button" [disabled]="!book.availableCopies || savingIsbn === book.isbn" (click)="addToCart(book)">
-                <i class="bi" [class.bi-arrow-repeat]="savingIsbn === book.isbn" [class.bi-cart-plus]="savingIsbn !== book.isbn"></i>
-                <span>Add</span>
-              </button>
+              <div class="d-flex gap-2">
+                <a class="btn btn-outline-primary" [routerLink]="['/books', book.isbn]">
+                  <i class="bi bi-eye"></i>
+                  <span>Details</span>
+                </a>
+                <button class="btn btn-primary" type="button" [disabled]="!book.availableCopies || savingIsbn === book.isbn" (click)="addToCart(book)">
+                  <i class="bi" [class.bi-arrow-repeat]="savingIsbn === book.isbn" [class.bi-cart-plus]="savingIsbn !== book.isbn"></i>
+                  <span>Add</span>
+                </button>
+              </div>
             </div>
           </div>
         </article>

@@ -23,10 +23,12 @@ import { AuthService } from '../../core/auth.service';
 
         <form class="d-grid gap-3" [formGroup]="form" (ngSubmit)="submit()">
           <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+          <div class="alert alert-success" *ngIf="created">Account created. Sign in with the same username and password.</div>
 
           <div>
             <label class="form-label" for="username">Username</label>
             <input id="username" class="form-control" type="text" formControlName="username" autocomplete="username" />
+            <small class="text-danger" *ngIf="isInvalid('username')">Username is required.</small>
           </div>
 
           <div>
@@ -38,6 +40,7 @@ import { AuthService } from '../../core/auth.service';
               formControlName="password"
               autocomplete="current-password"
             />
+            <small class="text-danger" *ngIf="isInvalid('password')">Password is required.</small>
           </div>
 
           <button class="btn btn-primary w-100" type="submit" [disabled]="loading || form.invalid">
@@ -74,6 +77,15 @@ export class LoginComponent {
   loading = false;
   error = '';
 
+  get created(): boolean {
+    return this.route.snapshot.queryParamMap.get('created') === 'true';
+  }
+
+  isInvalid(controlName: 'username' | 'password'): boolean {
+    const control = this.form.controls[controlName];
+    return control.touched && control.invalid;
+  }
+
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -90,7 +102,11 @@ export class LoginComponent {
         this.router.navigateByUrl(returnUrl);
       },
       error: (error: unknown) => {
-        this.error = extractErrorMessage(error);
+        const message = extractErrorMessage(error);
+        const status = typeof error === 'object' && error !== null && 'status' in error ? Number(error.status) : 0;
+        this.error = status === 500
+          ? 'Login failed. Check your username and password, then try again.'
+          : message;
         this.loading = false;
       }
     });

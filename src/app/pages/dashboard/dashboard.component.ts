@@ -1,19 +1,18 @@
-import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, CurrencyPipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Observable, catchError, forkJoin, of } from 'rxjs';
+import { Observable, catchError, forkJoin, map, of } from 'rxjs';
 
 import { ApiService } from '../../core/api.service';
+import { AuthService } from '../../core/auth.service';
 import {
   ApiRecord,
   BookConditionDto,
   BookDto,
   InventoryDto,
-  PurchaseLogDto,
   ShoppingCartDto,
   UserDto
 } from '../../data/models';
-import { RESOURCE_CONFIGS } from '../../data/resource-config';
 
 interface DashboardStat {
   label: string;
@@ -25,13 +24,13 @@ interface DashboardStat {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CurrencyPipe, NgFor, NgIf, RouterLink],
+  imports: [AsyncPipe, CurrencyPipe, NgFor, NgIf, RouterLink],
   template: `
     <section class="page-wrap">
       <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
         <div>
           <h1 class="page-title">Dashboard</h1>
-          <p class="page-subtitle">Live overview of the backend inventory tables.</p>
+          <p class="page-subtitle">A quick view of catalog activity, stock, and user carts.</p>
         </div>
         <a class="btn btn-primary" routerLink="/catalog">
           <i class="bi bi-journal-richtext"></i>
@@ -60,8 +59,8 @@ interface DashboardStat {
           <div class="surface p-3 h-100">
             <div class="d-flex align-items-center justify-content-between mb-3">
               <h2 class="h5 mb-0">Recent Books</h2>
-              <a class="btn btn-sm btn-outline-primary" routerLink="/manage/books">
-                <i class="bi bi-pencil-square"></i>
+              <a class="btn btn-sm btn-outline-primary" routerLink="/manage-books" *ngIf="isAdmin$ | async">
+                <i class="bi bi-book"></i>
                 <span>Manage</span>
               </a>
             </div>
@@ -78,7 +77,9 @@ interface DashboardStat {
                 <tbody>
                   <tr *ngFor="let book of recentBooks">
                     <td class="fw-semibold">{{ book.isbn }}</td>
-                    <td>{{ book.title }}</td>
+                    <td>
+                      <a class="fw-semibold text-decoration-none" [routerLink]="['/books', book.isbn]">{{ book.title }}</a>
+                    </td>
                     <td>{{ book.edition || '-' }}</td>
                     <td>{{ book.publisherId || '-' }}</td>
                   </tr>
@@ -117,20 +118,45 @@ interface DashboardStat {
         </div>
       </div>
 
-      <div class="surface p-3 mt-3">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-          <h2 class="h5 mb-0">Backend Tables</h2>
-          <span class="badge text-bg-light">{{ resources.length }} modules</span>
+      <div class="surface p-3 mt-3" *ngIf="isAdmin$ | async">
+        <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+          <h2 class="h5 mb-0">Management Shortcuts</h2>
+          <span class="badge text-bg-light">Admin</span>
         </div>
         <div class="row g-3">
-          <div class="col-sm-6 col-xl-3" *ngFor="let resource of resources">
-            <a class="surface d-flex align-items-center gap-3 p-3 text-decoration-none h-100" [routerLink]="['/manage', resource.key]">
-              <div class="stat-icon tone-neutral">
-                <i class="bi {{ resource.icon }}"></i>
-              </div>
+          <div class="col-sm-6 col-xl-3">
+            <a class="surface d-flex align-items-center gap-3 p-3 text-decoration-none h-100" routerLink="/manage-books">
+              <div class="stat-icon tone-neutral"><i class="bi bi-book"></i></div>
               <div>
-                <div class="fw-semibold">{{ resource.title }}</div>
-                <div class="text-muted small">{{ resource.endpoint }}</div>
+                <div class="fw-semibold">Manage Books</div>
+                <div class="text-muted small">Titles and authors</div>
+              </div>
+            </a>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <a class="surface d-flex align-items-center gap-3 p-3 text-decoration-none h-100" routerLink="/manage/authors">
+              <div class="stat-icon tone-neutral"><i class="bi bi-person-lines-fill"></i></div>
+              <div>
+                <div class="fw-semibold">Authors</div>
+                <div class="text-muted small">Creator records</div>
+              </div>
+            </a>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <a class="surface d-flex align-items-center gap-3 p-3 text-decoration-none h-100" routerLink="/manage/categories">
+              <div class="stat-icon tone-neutral"><i class="bi bi-tags"></i></div>
+              <div>
+                <div class="fw-semibold">Categories</div>
+                <div class="text-muted small">Catalog groups</div>
+              </div>
+            </a>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <a class="surface d-flex align-items-center gap-3 p-3 text-decoration-none h-100" routerLink="/manage/inventories">
+              <div class="stat-icon tone-neutral"><i class="bi bi-box-seam"></i></div>
+              <div>
+                <div class="fw-semibold">Inventory</div>
+                <div class="text-muted small">Stock copies</div>
               </div>
             </a>
           </div>
@@ -141,8 +167,12 @@ interface DashboardStat {
 })
 export class DashboardComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly auth = inject(AuthService);
 
-  readonly resources = RESOURCE_CONFIGS;
+  readonly isAdmin$ = this.auth.authState$.pipe(
+    map((state) => state.roles.some((role) => role.toUpperCase().includes('ADMIN')))
+  );
+
   stats: DashboardStat[] = [];
   recentBooks: BookDto[] = [];
   availableCopies = 0;
@@ -157,10 +187,9 @@ export class DashboardComponent implements OnInit {
       users: this.safeList<UserDto>('/api/users'),
       inventories: this.safeList<InventoryDto>('/api/inventories'),
       carts: this.safeList<ShoppingCartDto>('/api/shopping-carts'),
-      purchases: this.safeList<PurchaseLogDto>('/api/purchase-logs'),
       conditions: this.safeList<BookConditionDto>('/api/book-conditions')
     }).subscribe({
-      next: ({ books, users, inventories, carts, purchases, conditions }) => {
+      next: ({ books, users, inventories, carts, conditions }) => {
         this.recentBooks = [...books].slice(-6).reverse();
         this.totalCopies = inventories.length;
         this.availableCopies = inventories.filter((copy) => !copy.purchased).length;
@@ -172,7 +201,7 @@ export class DashboardComponent implements OnInit {
           { label: 'Books', value: books.length, icon: 'bi-book', tone: 'tone-primary' },
           { label: 'Users', value: users.length, icon: 'bi-people', tone: 'tone-coral' },
           { label: 'Cart Rows', value: carts.length, icon: 'bi-cart', tone: 'tone-gold' },
-          { label: 'Purchases', value: purchases.length, icon: 'bi-receipt', tone: 'tone-neutral' }
+          { label: 'Available Copies', value: this.availableCopies, icon: 'bi-box-seam', tone: 'tone-neutral' }
         ];
       },
       error: () => {

@@ -3,29 +3,30 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { ApiRecord } from '../data/models';
+import { apiUrl } from './api-url';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
 
   list<T extends ApiRecord = ApiRecord>(endpoint: string): Observable<T[]> {
-    return this.http.get<T[]>(endpoint);
+    return this.http.get<T[]>(apiUrl(endpoint));
   }
 
   get<T extends ApiRecord = ApiRecord>(endpoint: string, path: string): Observable<T> {
-    return this.http.get<T>(`${endpoint}/${path}`);
+    return this.http.get<T>(apiUrl(`${endpoint}/${path}`));
   }
 
   create<T extends ApiRecord = ApiRecord>(endpoint: string, payload: Partial<T>): Observable<T> {
-    return this.http.post<T>(endpoint, payload);
+    return this.http.post<T>(apiUrl(endpoint), payload);
   }
 
   update<T extends ApiRecord = ApiRecord>(endpoint: string, path: string, payload: Partial<T>): Observable<T> {
-    return this.http.put<T>(`${endpoint}/${path}`, payload);
+    return this.http.put<T>(apiUrl(`${endpoint}/${path}`), payload);
   }
 
   delete(endpoint: string, path: string): Observable<void> {
-    return this.http.delete<void>(`${endpoint}/${path}`);
+    return this.http.delete<void>(apiUrl(`${endpoint}/${path}`));
   }
 }
 

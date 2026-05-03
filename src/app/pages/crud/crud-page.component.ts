@@ -1,12 +1,12 @@
 import { NgFor, NgIf, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 
 import { ApiService, buildIdPath, extractErrorMessage } from '../../core/api.service';
 import { ApiRecord, FieldConfig, Primitive, ResourceConfig } from '../../data/models';
-import { RESOURCE_CONFIGS, RESOURCE_LOOKUP } from '../../data/resource-config';
+import { MANAGED_RESOURCE_KEYS, RESOURCE_CONFIGS, RESOURCE_LOOKUP } from '../../data/resource-config';
 
 @Component({
   selector: 'app-crud-page',
@@ -19,22 +19,28 @@ import { RESOURCE_CONFIGS, RESOURCE_LOOKUP } from '../../data/resource-config';
           <h1 class="page-title">{{ cfg.title }}</h1>
           <p class="page-subtitle">{{ cfg.description }}</p>
         </div>
-        <a class="btn btn-outline-primary" routerLink="/dashboard">
-          <i class="bi bi-speedometer2"></i>
-          <span>Dashboard</span>
-        </a>
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary" type="button" *ngIf="canCreate()" (click)="startCreate()">
+            <i class="bi bi-plus-circle"></i>
+            <span>Add {{ singularTitle() }}</span>
+          </button>
+          <a class="btn btn-outline-primary" routerLink="/dashboard">
+            <i class="bi bi-speedometer2"></i>
+            <span>Dashboard</span>
+          </a>
+        </div>
       </div>
 
       <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
       <div class="alert alert-success" *ngIf="message">{{ message }}</div>
 
-      <div class="crud-grid">
-        <div class="surface p-3">
+      <div [class.crud-grid]="showForm" [class.crud-list-only]="!showForm">
+        <div class="surface p-3" *ngIf="showForm">
           <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
-            <h2 class="h5 mb-0">{{ editingRecord ? 'Edit Record' : 'Create Record' }}</h2>
-            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="startCreate()">
-              <i class="bi bi-plus-circle"></i>
-              <span>New</span>
+            <h2 class="h5 mb-0">{{ editingRecord ? 'Edit ' + singularTitle() : 'Add ' + singularTitle() }}</h2>
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="hideForm()">
+              <i class="bi bi-x-lg"></i>
+              <span>Close</span>
             </button>
           </div>
 
@@ -124,7 +130,7 @@ import { RESOURCE_CONFIGS, RESOURCE_LOOKUP } from '../../data/resource-config';
                       <button class="btn btn-outline-primary" type="button" (click)="startEdit(record)" title="Edit">
                         <i class="bi bi-pencil"></i>
                       </button>
-                      <button class="btn btn-outline-danger" type="button" (click)="deleteRecord(record)" title="Delete">
+                      <button class="btn btn-outline-danger" type="button" *ngIf="canDelete()" (click)="deleteRecord(record)" title="Delete">
                         <i class="bi bi-trash"></i>
                       </button>
                     </div>
@@ -157,6 +163,7 @@ import { RESOURCE_CONFIGS, RESOURCE_LOOKUP } from '../../data/resource-config';
 export class CrudPageComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   config: ResourceConfig | null = null;
   form = new UntypedFormGroup({});
@@ -167,6 +174,7 @@ export class CrudPageComponent implements OnInit {
   searchTerm = '';
   loading = false;
   saving = false;
+  showForm = false;
   error = '';
   message = '';
 
@@ -186,6 +194,19 @@ export class CrudPageComponent implements OnInit {
     }
 
     return this.config.fields.filter((field) => this.editingRecord || !field.generated);
+  }
+
+  canCreate(): boolean {
+    return this.config?.key !== 'inventories';
+  }
+
+  canDelete(): boolean {
+    return this.config?.key !== 'inventories';
+  }
+
+  singularTitle(): string {
+    const title = this.config?.title ?? 'Record';
+    return title.endsWith('ies') ? title.slice(0, -3) + 'y' : title.endsWith('s') ? title.slice(0, -1) : title;
   }
 
   optionsFor(field: FieldConfig): ApiRecord[] {
@@ -210,7 +231,12 @@ export class CrudPageComponent implements OnInit {
   }
 
   startCreate(clearFeedback = true): void {
+    if (!this.canCreate()) {
+      return;
+    }
+
     this.editingRecord = null;
+    this.showForm = true;
     if (clearFeedback) {
       this.message = '';
       this.error = '';
@@ -221,10 +247,18 @@ export class CrudPageComponent implements OnInit {
 
   startEdit(record: ApiRecord): void {
     this.editingRecord = record;
+    this.showForm = true;
     this.message = '';
     this.error = '';
     this.form.reset(this.recordFormValue(record));
     this.setControlStates(true);
+  }
+
+  hideForm(): void {
+    this.showForm = false;
+    this.editingRecord = null;
+    this.form.reset(this.defaultFormValue());
+    this.setControlStates(false);
   }
 
   save(): void {
@@ -251,7 +285,7 @@ export class CrudPageComponent implements OnInit {
         this.message = this.editingRecord ? 'Record updated.' : 'Record created.';
         this.saving = false;
         this.loadRecords();
-        this.startCreate(false);
+        this.hideForm();
       },
       error: (error: unknown) => {
         this.error = extractErrorMessage(error);
@@ -309,7 +343,8 @@ export class CrudPageComponent implements OnInit {
   }
 
   private setupResource(resourceKey: string | null): void {
-    this.config = RESOURCE_CONFIGS.find((resource) => resource.key === resourceKey) ?? null;
+    const resource = RESOURCE_CONFIGS.find((item) => item.key === resourceKey) ?? null;
+    this.config = resource && MANAGED_RESOURCE_KEYS.includes(resource.key) ? resource : null;
     this.records = [];
     this.filteredRecords = [];
     this.searchTerm = '';
@@ -318,11 +353,12 @@ export class CrudPageComponent implements OnInit {
     this.message = '';
 
     if (!this.config) {
+      this.router.navigateByUrl('/dashboard');
       return;
     }
 
     this.buildForm();
-    this.startCreate();
+    this.hideForm();
     this.loadOptions();
     this.loadRecords();
   }

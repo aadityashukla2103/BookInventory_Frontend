@@ -2,6 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 
+import { apiUrl } from './api-url';
+
 interface JwtPayload {
   sub?: string;
   roles?: string[];
@@ -24,7 +26,7 @@ export class AuthService {
   readonly authState$ = this.authStateSubject.asObservable();
 
   login(username: string, password: string): Observable<string> {
-    return this.http.post('/generateToken', { username, password }, { responseType: 'text' }).pipe(
+    return this.http.post(apiUrl('/generateToken'), { username: username.trim(), password }, { responseType: 'text' }).pipe(
       tap((token) => this.setToken(token))
     );
   }
@@ -48,8 +50,9 @@ export class AuthService {
   }
 
   private setToken(token: string): void {
-    localStorage.setItem(this.storageKey, token);
-    this.authStateSubject.next(this.stateFromToken(token));
+    const cleanToken = token.trim();
+    localStorage.setItem(this.storageKey, cleanToken);
+    this.authStateSubject.next(this.stateFromToken(cleanToken));
   }
 
   private readState(): AuthState {

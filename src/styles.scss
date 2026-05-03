@@ -256,6 +256,54 @@ a {
   align-items: start;
 }
 
+.crud-list-only {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.book-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 1rem;
+  align-items: start;
+}
+
+.book-meta {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+}
+
+.book-meta dt {
+  color: var(--app-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.book-meta dd {
+  margin: 0.2rem 0 0;
+}
+
+.review-row {
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.book-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.book-form-wide {
+  grid-column: 1 / -1;
+}
+
+.author-select {
+  min-height: 148px;
+}
+
 .form-control,
 .form-select {
   border-radius: 8px;
@@ -295,6 +343,8 @@ a {
 @media (max-width: 992px) {
   .app-shell,
   .auth-screen,
+  .book-detail-grid,
+  .book-form,
   .crud-grid {
     grid-template-columns: 1fr;
   }

@@ -27,39 +27,42 @@ import { UserDto } from '../../data/models';
           <div class="row g-3">
             <div class="col-sm-6">
               <label class="form-label" for="firstName">First Name</label>
-              <input id="firstName" class="form-control" type="text" formControlName="firstName" />
+              <input id="firstName" class="form-control" type="text" formControlName="firstName" autocomplete="given-name" />
+              <small class="text-danger" *ngIf="isInvalid('firstName')">First name is required.</small>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="lastName">Last Name</label>
-              <input id="lastName" class="form-control" type="text" formControlName="lastName" />
+              <input id="lastName" class="form-control" type="text" formControlName="lastName" autocomplete="family-name" />
+              <small class="text-danger" *ngIf="isInvalid('lastName')">Last name is required.</small>
             </div>
           </div>
 
           <div>
             <label class="form-label" for="phoneNumber">Phone Number</label>
-            <input id="phoneNumber" class="form-control" type="tel" formControlName="phoneNumber" />
+            <input id="phoneNumber" class="form-control" type="tel" formControlName="phoneNumber" autocomplete="tel" />
+            <small class="text-danger" *ngIf="isInvalid('phoneNumber')">Enter a 10 digit phone number.</small>
           </div>
 
           <div>
             <label class="form-label" for="userName">Username</label>
             <input id="userName" class="form-control" type="text" formControlName="userName" autocomplete="username" />
+            <small class="text-danger" *ngIf="isInvalid('userName')">
+              {{ form.controls.userName.hasError('minlength') ? 'Username must be at least 3 characters.' : 'Username is required.' }}
+            </small>
           </div>
 
-          <div class="row g-3">
-            <div class="col-sm-7">
-              <label class="form-label" for="signupPassword">Password</label>
-              <input
-                id="signupPassword"
-                class="form-control"
-                type="password"
-                formControlName="password"
-                autocomplete="new-password"
-              />
-            </div>
-            <div class="col-sm-5">
-              <label class="form-label" for="roleNumber">Role Number</label>
-              <input id="roleNumber" class="form-control" type="number" formControlName="roleNumber" />
-            </div>
+          <div>
+            <label class="form-label" for="signupPassword">Password</label>
+            <input
+              id="signupPassword"
+              class="form-control"
+              type="password"
+              formControlName="password"
+              autocomplete="new-password"
+            />
+            <small class="text-danger" *ngIf="isInvalid('password')">
+              {{ form.controls.password.hasError('minlength') ? 'Password must be at least 6 characters.' : 'Password is required.' }}
+            </small>
           </div>
 
           <button class="btn btn-primary w-100" type="submit" [disabled]="loading || form.invalid">
@@ -77,7 +80,7 @@ import { UserDto } from '../../data/models';
       <div class="auth-art">
         <div class="auth-copy">
           <h1>Start with a user, then build the library.</h1>
-          <p>Signup writes directly to the Spring Boot user API, including the permission role number required by login.</p>
+          <p>Signup creates the backend user record, then login issues the JWT used throughout the inventory workspace.</p>
         </div>
       </div>
     </section>
@@ -90,14 +93,27 @@ export class SignupComponent {
   readonly form = new FormGroup({
     firstName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     lastName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    phoneNumber: new FormControl('', { nonNullable: true }),
-    userName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    roleNumber: new FormControl(2, { nonNullable: true, validators: [Validators.required, Validators.min(1)] })
+    phoneNumber: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.pattern(/^\d{10}$/)]
+    }),
+    userName: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(3)]
+    }),
+    password: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(6)]
+    })
   });
 
   loading = false;
   error = '';
+
+  isInvalid(controlName: keyof typeof this.form.controls): boolean {
+    const control = this.form.controls[controlName];
+    return control.touched && control.invalid;
+  }
 
   submit(): void {
     if (this.form.invalid) {
@@ -107,7 +123,14 @@ export class SignupComponent {
 
     this.loading = true;
     this.error = '';
-    const payload = this.form.getRawValue();
+    const values = this.form.getRawValue();
+    const payload = {
+      firstName: values.firstName.trim(),
+      lastName: values.lastName.trim(),
+      phoneNumber: values.phoneNumber.trim(),
+      userName: values.userName.trim(),
+      password: values.password
+    };
 
     this.api.create<UserDto>('/api/users', payload).subscribe({
       next: () => this.router.navigate(['/login'], { queryParams: { created: 'true' } }),
