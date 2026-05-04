@@ -1,0 +1,61 @@
+<section class="page-wrap">
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="page-title">{{ editing ? 'Edit Book' : 'Add Book' }}</h1>
+      <p class="page-subtitle">Connect title details with category, publisher, and authors.</p>
+    </div>
+    <a class="btn btn-outline-secondary" routerLink="/manage-books">
+      <i class="bi bi-arrow-left"></i>
+      <span>Manage Books</span>
+    </a>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+  <form class="surface p-3 book-form" [formGroup]="form" (ngSubmit)="save()">
+    <div>
+      <label class="form-label" for="title">Title</label>
+      <input id="title" class="form-control" type="text" maxlength="70" formControlName="title" />
+    </div>
+    <div>
+      <label class="form-label" for="isbn">ISBN</label>
+      <input id="isbn" class="form-control" type="text" maxlength="13" formControlName="isbn" />
+    </div>
+    <div class="book-form-wide">
+      <label class="form-label" for="description">Description</label>
+      <textarea id="description" class="form-control" rows="4" maxlength="100" formControlName="description"></textarea>
+    </div>
+    <div>
+      <label class="form-label" for="edition">Edition</label>
+      <input id="edition" class="form-control" type="text" maxlength="30" formControlName="edition" />
+    </div>
+    <div>
+      <label class="form-label" for="categoryId">Category</label>
+      <select id="categoryId" class="form-select" formControlName="categoryId">
+        <option [ngValue]="null">Select category</option>
+        <option *ngFor="let category of categories" [ngValue]="category.catId">{{ category.categoryName }}</option>
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="publisherId">Publisher</label>
+      <select id="publisherId" class="form-select" formControlName="publisherId">
+        <option [ngValue]="null">Select publisher</option>
+        <option *ngFor="let publisher of publishers" [ngValue]="publisher.publisherId">{{ publisher.name }}</option>
+      </select>
+    </div>
+    <div class="book-form-wide">
+      <label class="form-label" for="authors">Authors</label>
+      <select id="authors" class="form-select author-select" multiple [(ngModel)]="selectedAuthorIds" [ngModelOptions]="{ standalone: true }">
+        <option *ngFor="let author of authors" [ngValue]="author.authorID">{{ authorName(author) }}</option>
+      </select>
+    </div>
+
+    <div class="book-form-wide d-flex justify-content-end gap-2 border-top pt-3">
+      <a class="btn btn-outline-secondary" routerLink="/manage-books">Cancel</a>
+      <button class="btn btn-primary" type="submit" [disabled]="form.invalid || saving">
+        <i class="bi" [class.bi-arrow-repeat]="saving" [class.bi-save]="!saving"></i>
+        <span>{{ saving ? 'Saving' : 'Save Book' }}</span>
+      </button>
+    </div>
+  </form>
+</section>

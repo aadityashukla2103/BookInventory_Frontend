@@ -1,0 +1,63 @@
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <div class="brand-mark">
+        <i class="bi bi-bookshelf"></i>
+      </div>
+      <div>
+        <div class="fw-bold fs-5">Book Inventory</div>
+        <div class="text-muted small">Spring Boot API</div>
+      </div>
+    </div>
+
+    <div class="nav-section-title">Main</div>
+    <nav class="d-grid gap-1">
+      <a class="side-link" routerLink="/dashboard" routerLinkActive="active">
+        <i class="bi bi-speedometer2"></i>
+        <span>Dashboard</span>
+      </a>
+      <a class="side-link" routerLink="/catalog" routerLinkActive="active">
+        <i class="bi bi-journal-richtext"></i>
+        <span>Catalog</span>
+      </a>
+      <a class="side-link" routerLink="/cart" routerLinkActive="active">
+        <i class="bi bi-cart-check"></i>
+        <span>Cart</span>
+      </a>
+    </nav>
+
+    <ng-container *ngIf="isAdmin$ | async">
+      <div class="nav-section-title">Management</div>
+      <nav class="d-grid gap-1">
+        <a class="side-link" routerLink="/manage-books" routerLinkActive="active">
+          <i class="bi bi-book"></i>
+          <span>Manage Books</span>
+        </a>
+        <a
+          *ngFor="let resource of adminResources"
+          class="side-link"
+          [routerLink]="['/manage', resource.key]"
+          routerLinkActive="active"
+        >
+          <i class="bi {{ resource.icon }}"></i>
+          <span>{{ resource.title }}</span>
+        </a>
+      </nav>
+    </ng-container>
+  </aside>
+
+  <main class="app-main">
+    <header class="topbar d-flex align-items-center justify-content-between gap-3">
+      <div *ngIf="authState$ | async as auth">
+        <div class="fw-semibold">{{ auth.username || 'Signed in' }}</div>
+        <div class="text-muted small">{{ auth.roles.length ? auth.roles.join(', ') : 'Authenticated user' }}</div>
+      </div>
+      <button class="btn btn-outline-danger" type="button" (click)="logout()">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Logout</span>
+      </button>
+    </header>
+
+    <router-outlet />
+  </main>
+</div>

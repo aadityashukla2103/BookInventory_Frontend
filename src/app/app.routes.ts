@@ -1,15 +1,17 @@
 import { Routes } from '@angular/router';
 
-import { adminGuard } from './core/admin.guard';
-import { authGuard } from './core/auth.guard';
-import { ShellComponent } from './layout/shell.component';
-import { BookDetailComponent, BookFormComponent, BookListComponent } from './pages/books/book-flow.component';
-import { CartComponent } from './pages/cart/cart.component';
-import { CatalogComponent } from './pages/catalog/catalog.component';
-import { CrudPageComponent } from './pages/crud/crud-page.component';
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
-import { LoginComponent } from './pages/login/login.component';
-import { SignupComponent } from './pages/signup/signup.component';
+import { adminGuard } from './admin.guard';
+import { authGuard } from './auth.guard';
+import { ShellComponent } from './shell/shell.component';
+import { BookDetailComponent } from './book-detail/book-detail.component';
+import { BookFormComponent } from './book-form/book-form.component';
+import { BookListComponent } from './book-list/book-list.component';
+import { CartComponent } from './cart/cart.component';
+import { CatalogComponent } from './catalog/catalog.component';
+import { CrudPageComponent } from './crud/crud-page.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
+import { LoginComponent } from './login/login.component';
+import { SignupComponent } from './signup/signup.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },

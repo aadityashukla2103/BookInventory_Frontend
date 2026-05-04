@@ -2,8 +2,8 @@ import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { Observable, catchError, firstValueFrom, forkJoin, of } from 'rxjs';
 
-import { ApiService, buildIdPath, extractErrorMessage } from '../../core/api.service';
-import { CurrentUserService } from '../../core/current-user.service';
+import { ApiService, buildIdPath, extractErrorMessage } from '../services/api.service';
+import { CurrentUserService } from '../services/current-user.service';
 import {
   ApiRecord,
   AuthorDto,
@@ -14,7 +14,7 @@ import {
   PurchaseLogDto,
   ShoppingCartDto,
   UserDto
-} from '../../data/models';
+} from '../models';
 
 interface CartLine {
   cart: ShoppingCartDto;
@@ -29,73 +29,7 @@ interface CartLine {
   selector: 'app-cart',
   standalone: true,
   imports: [CurrencyPipe, NgFor, NgIf],
-  template: `
-    <section class="page-wrap">
-      <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
-        <div>
-          <h1 class="page-title">Cart</h1>
-          <p class="page-subtitle">Review selected books and convert available copies into purchase logs.</p>
-        </div>
-        <button class="btn btn-primary" type="button" [disabled]="!cartLines.length || checkingOut" (click)="checkout()">
-          <i class="bi" [class.bi-arrow-repeat]="checkingOut" [class.bi-credit-card]="!checkingOut"></i>
-          <span>{{ checkingOut ? 'Checking out' : 'Checkout' }}</span>
-        </button>
-      </div>
-
-      <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
-      <div class="alert alert-success" *ngIf="message">{{ message }}</div>
-
-      <div class="surface p-3" *ngIf="cartLines.length; else emptyCart">
-        <div class="table-responsive">
-          <table class="table align-middle">
-            <thead>
-              <tr>
-                <th>Book</th>
-                <th>Authors</th>
-                <th>Condition</th>
-                <th>Available</th>
-                <th class="text-end">Price</th>
-                <th class="text-end">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let line of cartLines">
-                <td>
-                  <div class="fw-semibold">{{ line.book?.title || line.cart.isbn }}</div>
-                  <div class="text-muted small">{{ line.cart.isbn }}</div>
-                </td>
-                <td>{{ line.authors.length ? line.authors.join(', ') : '-' }}</td>
-                <td>{{ line.condition?.description || '-' }}</td>
-                <td>
-                  <span class="badge" [class.text-bg-success]="line.availableCopies" [class.text-bg-danger]="!line.availableCopies">
-                    {{ line.availableCopies }}
-                  </span>
-                </td>
-                <td class="text-end">{{ (line.condition?.price ?? 0) | currency }}</td>
-                <td class="text-end">
-                  <button class="btn btn-sm btn-outline-danger" type="button" (click)="remove(line)">
-                    <i class="bi bi-trash"></i>
-                    <span>Remove</span>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="4" class="text-end fw-semibold">Estimated total</td>
-                <td class="text-end fw-bold">{{ subtotal | currency }}</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-
-      <ng-template #emptyCart>
-        <div class="empty-state">Your cart is empty.</div>
-      </ng-template>
-    </section>
-  `
+  templateUrl: './cart.component.html'
 })
 export class CartComponent implements OnInit {
   private readonly api = inject(ApiService);

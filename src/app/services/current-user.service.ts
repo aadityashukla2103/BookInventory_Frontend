@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map, of, tap } from 'rxjs';
 
-import { UserDto } from '../data/models';
+import { UserDto } from '../models';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 

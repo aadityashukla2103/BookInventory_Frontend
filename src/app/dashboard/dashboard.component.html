@@ -1,0 +1,137 @@
+<section class="page-wrap">
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">A quick view of catalog activity, stock, and user carts.</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/catalog">
+      <i class="bi bi-journal-richtext"></i>
+      <span>Open Catalog</span>
+    </a>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3" *ngFor="let stat of stats">
+      <div class="surface stat-card d-flex justify-content-between gap-3">
+        <div>
+          <div class="text-muted small fw-semibold">{{ stat.label }}</div>
+          <div class="display-6 fw-bold">{{ stat.value }}</div>
+        </div>
+        <div class="stat-icon {{ stat.tone }}">
+          <i class="bi {{ stat.icon }}"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-xl-7">
+      <div class="surface p-3 h-100">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h2 class="h5 mb-0">Recent Books</h2>
+          <a class="btn btn-sm btn-outline-primary" routerLink="/manage-books" *ngIf="isAdmin$ | async">
+            <i class="bi bi-book"></i>
+            <span>Manage</span>
+          </a>
+        </div>
+        <div class="table-responsive" *ngIf="recentBooks.length; else noBooks">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>ISBN</th>
+                <th>Title</th>
+                <th>Edition</th>
+                <th>Publisher</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let book of recentBooks">
+                <td class="fw-semibold">{{ book.isbn }}</td>
+                <td>
+                  <a class="fw-semibold text-decoration-none" [routerLink]="['/books', book.isbn]">{{ book.title }}</a>
+                </td>
+                <td>{{ book.edition || '-' }}</td>
+                <td>{{ book.publisherId || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noBooks>
+          <div class="empty-state">No books found.</div>
+        </ng-template>
+      </div>
+    </div>
+
+    <div class="col-xl-5">
+      <div class="surface p-3 h-100">
+        <h2 class="h5 mb-3">Inventory Snapshot</h2>
+        <div class="d-grid gap-3">
+          <div>
+            <div class="d-flex justify-content-between small mb-1">
+              <span>Available copies</span>
+              <span class="fw-semibold">{{ availableCopies }} / {{ totalCopies }}</span>
+            </div>
+            <div class="progress" style="height: 10px">
+              <div class="progress-bar bg-success" [style.width.%]="availabilityPercent"></div>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between border-top pt-3">
+            <span class="text-muted">Estimated unsold value</span>
+            <span class="fw-bold">{{ estimatedAvailableValue | currency }}</span>
+          </div>
+          <a class="btn btn-outline-primary" routerLink="/manage/inventories">
+            <i class="bi bi-box-seam"></i>
+            <span>Manage Inventory</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="surface p-3 mt-3" *ngIf="isAdmin$ | async">
+    <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+      <h2 class="h5 mb-0">Management Shortcuts</h2>
+      <span class="badge text-bg-light">Admin</span>
+    </div>
+    <div class="row g-3">
+      <div class="col-sm-6 col-xl-3">
+        <a class="surface d-flex align-items-center gap-3 p-3 text-decoration-none h-100" routerLink="/manage-books">
+          <div class="stat-icon tone-neutral"><i class="bi bi-book"></i></div>
+          <div>
+            <div class="fw-semibold">Manage Books</div>
+            <div class="text-muted small">Titles and authors</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <a class="surface d-flex align-items-center gap-3 p-3 text-decoration-none h-100" routerLink="/manage/authors">
+          <div class="stat-icon tone-neutral"><i class="bi bi-person-lines-fill"></i></div>
+          <div>
+            <div class="fw-semibold">Authors</div>
+            <div class="text-muted small">Creator records</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <a class="surface d-flex align-items-center gap-3 p-3 text-decoration-none h-100" routerLink="/manage/categories">
+          <div class="stat-icon tone-neutral"><i class="bi bi-tags"></i></div>
+          <div>
+            <div class="fw-semibold">Categories</div>
+            <div class="text-muted small">Catalog groups</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <a class="surface d-flex align-items-center gap-3 p-3 text-decoration-none h-100" routerLink="/manage/inventories">
+          <div class="stat-icon tone-neutral"><i class="bi bi-box-seam"></i></div>
+          <div>
+            <div class="fw-semibold">Inventory</div>
+            <div class="text-muted small">Stock copies</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

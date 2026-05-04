@@ -1,0 +1,96 @@
+<section class="page-wrap">
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="page-title">{{ book?.title || 'Book Detail' }}</h1>
+      <p class="page-subtitle">{{ book?.isbn || 'Loading selected book.' }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" routerLink="/catalog">
+        <i class="bi bi-arrow-left"></i>
+        <span>Catalog</span>
+      </a>
+      <a class="btn btn-primary" [routerLink]="['/manage-books', book.isbn, 'edit']" *ngIf="book && (isAdmin$ | async)">
+        <i class="bi bi-pencil"></i>
+        <span>Edit</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+  <div class="alert alert-success" *ngIf="message">{{ message }}</div>
+
+  <ng-container *ngIf="book; else loadingDetail">
+    <div class="book-detail-grid">
+      <article class="surface p-3">
+        <div class="d-flex align-items-start justify-content-between gap-3 border-bottom pb-3 mb-3">
+          <div>
+            <div class="text-muted small">Inventory status</div>
+            <div class="h4 mb-0" [class.text-success]="book.availableCopies" [class.text-danger]="!book.availableCopies">
+              {{ book.availableCopies ? 'Available' : 'Out of Stock' }}
+            </div>
+          </div>
+          <span class="badge text-bg-light">{{ book.availableCopies }} copies</span>
+        </div>
+
+        <dl class="book-meta">
+          <div>
+            <dt>Description</dt>
+            <dd>{{ book.description || 'No description available.' }}</dd>
+          </div>
+          <div>
+            <dt>Category</dt>
+            <dd>{{ book.categoryName || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Publisher</dt>
+            <dd>{{ book.publisherName || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Authors</dt>
+            <dd>{{ book.authorNames.length ? book.authorNames.join(', ') : 'Unassigned' }}</dd>
+          </div>
+          <div>
+            <dt>Edition</dt>
+            <dd>{{ book.edition || '-' }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <aside class="surface p-3">
+        <h2 class="h5 mb-3">Reviews</h2>
+        <div class="d-grid gap-2 mb-4" *ngIf="reviews.length; else noReviews">
+          <div class="review-row" *ngFor="let review of reviews">
+            <div class="d-flex justify-content-between gap-3">
+              <strong>{{ review.reviewerName }}</strong>
+              <span class="text-warning">{{ stars(review.rating) }}</span>
+            </div>
+            <p class="mb-0 text-muted small">{{ review.comments || 'No comment.' }}</p>
+          </div>
+        </div>
+        <ng-template #noReviews>
+          <div class="empty-state mb-4">No reviews added yet.</div>
+        </ng-template>
+
+        <form class="d-grid gap-3" [formGroup]="reviewForm" (ngSubmit)="addReview()">
+          <div class="small text-muted">Reviewing as {{ currentReviewerName || 'your account' }}</div>
+          <div>
+            <label class="form-label" for="rating">Rating</label>
+            <input id="rating" class="form-control" type="number" min="1" max="5" formControlName="rating" />
+          </div>
+          <div>
+            <label class="form-label" for="comments">Comment</label>
+            <textarea id="comments" class="form-control" rows="3" maxlength="255" formControlName="comments"></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit" [disabled]="reviewForm.invalid || savingReview">
+            <i class="bi" [class.bi-arrow-repeat]="savingReview" [class.bi-star]="!savingReview"></i>
+            <span>{{ savingReview ? 'Saving' : 'Add Review' }}</span>
+          </button>
+        </form>
+      </aside>
+    </div>
+  </ng-container>
+
+  <ng-template #loadingDetail>
+    <div class="empty-state">{{ loading ? 'Loading book detail...' : 'Book not found.' }}</div>
+  </ng-template>
+</section>

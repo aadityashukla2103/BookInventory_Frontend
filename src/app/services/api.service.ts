@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { ApiRecord } from '../data/models';
+import { ApiRecord } from '../models';
 import { apiUrl } from './api-url';
 
 @Injectable({ providedIn: 'root' })

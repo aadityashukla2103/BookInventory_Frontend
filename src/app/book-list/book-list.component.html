@@ -1,0 +1,93 @@
+<section class="page-wrap">
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="page-title">Manage Books</h1>
+      <p class="page-subtitle">Create titles and connect them to categories, publishers, authors, and stock.</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/manage-books/new" *ngIf="isAdmin$ | async">
+      <i class="bi bi-plus-circle"></i>
+      <span>Add Book</span>
+    </a>
+  </div>
+
+  <div class="surface p-3 mb-3">
+    <div class="row g-3 align-items-end">
+      <div class="col-lg-6">
+        <label class="form-label" for="bookSearch">Search</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input
+            id="bookSearch"
+            class="form-control"
+            type="search"
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="applyFilters()"
+            placeholder="Title, ISBN, category, publisher"
+          />
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <label class="form-label" for="bookCategory">Category</label>
+        <select id="bookCategory" class="form-select" [(ngModel)]="categoryFilter" (ngModelChange)="applyFilters()">
+          <option value="">All categories</option>
+          <option *ngFor="let category of categories" [value]="category.catId">{{ category.categoryName }}</option>
+        </select>
+      </div>
+      <div class="col-lg-2 d-grid">
+        <button class="btn btn-outline-secondary" type="button" (click)="clearFilters()">
+          <i class="bi bi-x-circle"></i>
+          <span>Clear</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+  <div class="alert alert-success" *ngIf="message">{{ message }}</div>
+
+  <div class="surface p-3">
+    <div class="table-responsive" *ngIf="filteredBooks.length; else emptyBooks">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Publisher</th>
+            <th>Edition</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let book of filteredBooks">
+            <td>
+              <div class="fw-semibold">{{ book.title }}</div>
+              <div class="text-muted small">{{ book.isbn }}</div>
+            </td>
+            <td>{{ book.categoryName || '-' }}</td>
+            <td>{{ book.publisherName || '-' }}</td>
+            <td>{{ book.edition || '-' }}</td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                <a class="btn btn-outline-primary" [routerLink]="['/books', book.isbn]" title="View details">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <ng-container *ngIf="isAdmin$ | async">
+                  <a class="btn btn-outline-secondary" [routerLink]="['/manage-books', book.isbn, 'edit']" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <button class="btn btn-outline-danger" type="button" (click)="deleteBook(book)" title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </ng-container>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyBooks>
+      <div class="empty-state">{{ loading ? 'Loading books...' : 'No books found.' }}</div>
+    </ng-template>
+  </div>
+</section>

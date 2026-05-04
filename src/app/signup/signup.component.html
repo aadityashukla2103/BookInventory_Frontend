@@ -1,0 +1,73 @@
+<section class="auth-screen">
+  <div class="auth-panel">
+    <div class="mb-4">
+      <div class="brand-mark mb-3">
+        <i class="bi bi-person-plus"></i>
+      </div>
+      <h1 class="page-title">Sign Up</h1>
+      <p class="page-subtitle">Create a backend user record and continue to login.</p>
+    </div>
+
+    <form class="d-grid gap-3" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <label class="form-label" for="firstName">First Name</label>
+          <input id="firstName" class="form-control" type="text" formControlName="firstName" autocomplete="given-name" />
+          <small class="text-danger" *ngIf="isInvalid('firstName')">First name is required.</small>
+        </div>
+        <div class="col-sm-6">
+          <label class="form-label" for="lastName">Last Name</label>
+          <input id="lastName" class="form-control" type="text" formControlName="lastName" autocomplete="family-name" />
+          <small class="text-danger" *ngIf="isInvalid('lastName')">Last name is required.</small>
+        </div>
+      </div>
+
+      <div>
+        <label class="form-label" for="phoneNumber">Phone Number</label>
+        <input id="phoneNumber" class="form-control" type="tel" formControlName="phoneNumber" autocomplete="tel" />
+        <small class="text-danger" *ngIf="isInvalid('phoneNumber')">Enter a 10 digit phone number.</small>
+      </div>
+
+      <div>
+        <label class="form-label" for="userName">Username</label>
+        <input id="userName" class="form-control" type="text" formControlName="userName" autocomplete="username" />
+        <small class="text-danger" *ngIf="isInvalid('userName')">
+          {{ form.controls.userName.hasError('minlength') ? 'Username must be at least 3 characters.' : 'Username is required.' }}
+        </small>
+      </div>
+
+      <div>
+        <label class="form-label" for="signupPassword">Password</label>
+        <input
+          id="signupPassword"
+          class="form-control"
+          type="password"
+          formControlName="password"
+          autocomplete="new-password"
+        />
+        <small class="text-danger" *ngIf="isInvalid('password')">
+          {{ form.controls.password.hasError('minlength') ? 'Password must be at least 6 characters.' : 'Password is required.' }}
+        </small>
+      </div>
+
+      <button class="btn btn-primary w-100" type="submit" [disabled]="loading || form.invalid">
+        <i class="bi" [class.bi-arrow-repeat]="loading" [class.bi-person-check]="!loading"></i>
+        <span>{{ loading ? 'Creating account' : 'Create account' }}</span>
+      </button>
+
+      <div class="text-center text-muted">
+        Already registered?
+        <a routerLink="/login" class="fw-semibold">Back to login</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="auth-art">
+    <div class="auth-copy">
+      <h1>Start with a user, then build the library.</h1>
+      <p>Signup creates the backend user record, then login issues the JWT used throughout the inventory workspace.</p>
+    </div>
+  </div>
+</section>
